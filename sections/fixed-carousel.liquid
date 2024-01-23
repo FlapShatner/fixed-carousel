@@ -1,0 +1,326 @@
+<link rel="preload" as="style" href="{{ 'featured-collection-list.css' | asset_url }}">
+{{ 'featured-collection-list.css' | asset_url | stylesheet_tag }}
+<link rel="preload" as="style" href="{{ 'fixed-carousel.css' | asset_url }}">
+{{ 'fixed-carousel.css' | asset_url | stylesheet_tag }}
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+{% liquid
+  assign featureStatus = true
+%}
+
+<div
+  class="section-wrapper  horizontal-scroll-section featured-collection-scroll-outerbox"
+  data-collection-selector
+  data-collection-carousel
+>
+  <div class="featured-collection-list__outer">
+    <div class="container">
+      <div class="section-heading-box heading-between">
+        <h3 class="section-heading-title rte">
+          <!-- Dynamic heading content goes here -->
+          {% if section.settings.heading != blank %}
+            {{ section.settings.heading }}
+          {% else %}
+            Collection carousel
+          {% endif %}
+        </h3>
+        {% if section.settings.view_all_button_text != blank and section.settings.btn_link != blank %}
+          <a href="#" class="unstyled-link section-link" aria-label="View All">
+            <div class="section-link-inner">
+              <span>View All</span>
+            </div>
+            <svg viewBox="0 0 4.59 7.06" fill="currentColor">
+              <g><polygon points="1.06 7.06 0 6 2.47 3.53 0 1.06 1.06 0 4.59 3.53 1.06 7.06" /></g>
+            </svg>
+          </a>
+        {% endif %}
+      </div>
+    </div>
+
+    <div
+      class="featured-collection-list__scrollbar scrolling-wrapper"
+      data-item-right="{% if section.blocks.size == 4 or section.blocks.size == 3 %}2.1{% else %}1.29{% endif %}"
+    >
+      {%- for block in section.blocks -%}
+        {%- liquid
+          assign url = ''
+          assign imageContent = ''
+          assign collection = ''
+          assign imageRatio = 100
+          assign collection = block.settings.collection
+          if block.settings.image != blank
+            assign imageContent = block.settings.image
+          elsif collection.featured_image
+            assign imageContent = collection.featured_image
+          endif
+          if block.settings.url != blank
+            assign url = block.settings.url
+          elsif collection.url != blank
+            assign url = collection.url
+          endif
+        -%}
+
+        <!-- START -->
+        <div
+          class="featured-collection-list__item scrolling-card"
+          data-horizontal-element
+          data-index="{{ forloop.index0 }}"
+          {{ block.shopify_attributes }}
+        >
+          <a
+            class="featured-collection-list__item-link collection-carousel-link"
+            href="{{ collection.url | default : '#' }}"
+          ></a>
+
+          <div class="featured-collection-list__img">
+            {%- if imageContent != blank -%}
+              {%- render 'lazy-image', image: imageContent -%}
+            {%- else -%}
+              {{ 'collection-1' | placeholder_svg_tag: 'placeholder-svg' }}
+            {%- endif -%}
+          </div>
+
+          <a
+            href="{{ url | default : '#' }}"
+            tabindex="-1"
+          >
+            {%- if block.settings.collection_heading != blank -%}
+              {{ block.settings.collection_heading -}}
+            {%- elsif collection != blank -%}
+              {{- collection.title | strip_html -}}
+            {%- else -%}
+              {{ 'sections.onboarding_collection.title' | t }}
+            {%- endif %}
+          </a>
+        </div>
+      {% endfor %}
+    </div>
+
+    {% liquid
+      assign limit = 1
+      if section.blocks.size == 4
+        assign limit = 3
+      elsif section.blocks.size > 3
+        assign limit = 2
+      endif
+      assign counter = 0
+    %}
+    {% capture collectionCarouselData1 %}
+      {% for i in (1..limit) %}
+        {%- for block in section.blocks -%}
+
+          {%- liquid
+               assign counter = counter | plus : 1
+               assign imageContent = ''
+               assign collection = ''
+               assign imageRatio = 100
+               assign collection = block.settings.collection
+               if block.settings.image != blank
+                 assign imageContent = block.settings.image
+               elsif collection.featured_image
+                 assign imageContent = collection.featured_image
+               endif 
+              -%}
+          {% render 'collection-carousel-item' section: section, block: block, imageContent: imageContent, counter: counter, collection: collection, forloop: forloop, loopPrefix: 0 %}
+          {% liquid
+              assign currentOffset = forloop.index
+              if counter == 10
+              break
+              endif
+            %}
+        {% endfor %}
+        {% liquid
+              if counter == 10
+              break
+              endif
+            %}
+      {% endfor %}
+    {% endcapture %}
+    {% capture collectionCarouselData2 %}
+          {% for i in (1..3) %}
+            {% liquid
+              if forloop.index > 1
+                assign currentOffset = 0
+              endif
+            %}
+            {%- for block in section.blocks offset: currentOffset -%}
+              {%- liquid
+                   assign counter = counter | plus : 1
+                   assign imageContent = ''
+                   assign collection = ''
+                   assign imageRatio = 100
+                   assign collection = block.settings.collection
+                   if block.settings.image != blank
+                     assign imageContent = block.settings.image
+                   elsif collection.featured_image
+                     assign imageContent = collection.featured_image
+                   endif 
+                  -%}
+              {% render 'collection-carousel-item' section: section, block: block, imageContent: imageContent, counter: counter, collection: collection, forloop: forloop, loopPrefix: 10 %}
+              {% liquid
+                  if counter == 10
+                  break
+                  endif
+                %}
+            {% endfor %}
+            {% liquid
+                  if counter == 10
+                  break
+                  endif
+                %}
+          {% endfor %}
+        {% endcapture %}
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Fixed Carousel",
+  "tag": "section",
+  "class": "fixed-carousel",
+  "disabled_on": {
+    "groups": ["header", "footer"]
+  },
+  "max_blocks": 10,
+  "settings": [
+    {
+      "type": "inline_richtext",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Collection carousel"
+    },
+    {
+      "type": "select",
+      "id": "heading_size",
+      "label": "t:common.heading_size.label",
+      "default": "h5",
+      "options": [
+        {
+          "value": "h1",
+          "label": "t:common.heading_size.options.h1.label"
+        },
+        {
+          "value": "h2",
+          "label": "t:common.heading_size.options.h2.label"
+        },
+        {
+          "value": "h3",
+          "label": "t:common.heading_size.options.h3.label"
+        },
+        {
+          "value": "h4",
+          "label": "t:common.heading_size.options.h4.label"
+        },
+        {
+          "value": "h5",
+          "label": "t:common.heading_size.options.h5.label"
+        },
+        {
+          "value": "h6",
+          "label": "t:common.heading_size.options.h6.label"
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "id": "view_all_button_text",
+      "label": "Button text",
+      "default": "View all"
+    },
+    {
+      "type": "url",
+      "id": "btn_link",
+      "label": "Button link",
+      "default": "/collections/all"
+    },
+    {
+      "type": "select",
+      "id": "color_scheme",
+      "label": "t:common.color_scheme.label",
+      "default": "primary",
+      "options": [
+        {
+          "value": "primary",
+          "label": "t:common.color_scheme.options.primary.label"
+        },
+        {
+          "value": "secondary",
+          "label": "t:common.color_scheme.options.secondary.label"
+        },
+        {
+          "value": "tertiary",
+          "label": "t:common.color_scheme.options.tertiary.label"
+        },
+        {
+          "value": "quaternary",
+          "label": "t:common.color_scheme.options.quaternary.label"
+        }
+      ]
+    }
+  ],
+  "blocks": [
+    {
+      "type": "collection",
+      "name": "t:sections.collection_carousel.blocks.collection.name",
+      "settings": [
+        {
+          "type": "collection",
+          "id": "collection",
+          "label": "t:sections.collection_carousel.blocks.collection.settings.collection.label"
+        },
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "t:common.image.label"
+        },
+        {
+          "type": "url",
+          "id": "url",
+          "label": "Link URL"
+        },
+        {
+          "type": "text",
+          "id": "collection_heading",
+          "label": "t:sections.collection_carousel.blocks.collection.settings.collection_title.label",
+          "info": "t:sections.collection_carousel.blocks.collection.settings.collection_title.info"
+        },
+        {
+          "type": "header",
+          "content": "t:common.header.color_singular_section.label",
+          "info": "t:sections.collection_carousel.blocks.collection.settings.background.info"
+        },
+        {
+          "type": "color",
+          "id": "collection_bg_color",
+          "label": "t:sections.collection_carousel.blocks.collection.settings.background.label"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:sections.collection_carousel.presets.name",
+      "blocks": [
+        {
+          "type": "collection"
+        },
+        {
+          "type": "collection"
+        },
+        {
+          "type": "collection"
+        },
+        {
+          "type": "collection"
+        },
+        {
+          "type": "collection"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}
