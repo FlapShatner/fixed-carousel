@@ -3,10 +3,6 @@
 <link rel="preload" as="style" href="{{ 'fixed-carousel.css' | asset_url }}">
 {{ 'fixed-carousel.css' | asset_url | stylesheet_tag }}
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-
 {% liquid
   assign featureStatus = true
 %}
@@ -174,6 +170,18 @@
           {% endfor %}
         {% endcapture %}
   </div>
+
+  <script>
+    gsap.registerPlugin(ScrollTrigger);
+    let items = gsap.utils.toArray('.scrolling-card');
+    gsap.to(items, {
+      x: 200,
+      scrollTrigger: {
+        trigger: '.scrolling-wrapper',
+        pin: true,
+      },
+    });
+  </script>
 </div>
 
 {% schema %}
